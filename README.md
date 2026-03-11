@@ -127,5 +127,5 @@ GROUP BY u.gender;
 ## 🚀 How to Run
 1. Clone the repo
 2. Upload CSVs to Kaggle or run locally with Python
-3. Run `sql/funnel_queries.sql` in your SQL environment
+3. Run `sql/funnel_queries.ipynb` in your SQL environment
 4. Open `dashboard/funnel_dashboard.pbix` in Power BI Desktop
