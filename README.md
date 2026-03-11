@@ -73,7 +73,7 @@ ecommerce-funnel-analysis/
 │   └── funnel_analysis.xlsx
 │
 ├── sql/
-│   └── funnel_queries.sql
+│   └── funnel_queries.ipynb
 │
 ├── dashboard/
 │   └── funnel_dashboard.pbix
