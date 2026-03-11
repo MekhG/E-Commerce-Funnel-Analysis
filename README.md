@@ -2,6 +2,7 @@
 A end-to-end funnel analysis project tracking 1,000 users across a 4-stage e-commerce purchase journey — from Homepage to Order Confirmation. The project identifies drop-off points, segments conversion rates by gender, device, and traffic source, and visualises findings in an interactive Power BI dashboard.
 
 ## 📊 Dashboard Preview
+<img width="637" height="373" alt="image" src="https://github.com/user-attachments/assets/f2247051-0096-4ed5-be93-854bb8b89ec0" />
 
 
 ## 🔍 Key Findings
