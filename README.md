@@ -58,27 +58,6 @@ Custom-generated dataset simulating real e-commerce user behaviour across 5 tabl
 
 ---
 
-## 📁 Repository Structure
-```
-ecommerce-funnel-analysis/
-│
-├── data/
-│   ├── user_table.csv
-│   ├── home_page.csv
-│   ├── search_page.csv
-│   ├── payment_page.csv
-│   └── confirmation_page.csv
-│
-├── excel/
-│   └── funnel_analysis.xlsx
-│
-├── sql/
-│   └── funnel_queries.ipynb
-│
-├── dashboard/
-│   └── funnel_dashboard.pbix
-│
-└── README.md
 ```
 
 ---
