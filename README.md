@@ -10,7 +10,7 @@ The project replicates real-world **product and marketing analytics workflows**,
 ---
 # 📈 Dashboard Preview
 
-
+![Dashboard](images/ecommerce.png)
 ---
 
 
