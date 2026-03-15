@@ -1,0 +1,169 @@
+conn = sqlite3.connect(':memory:')
+
+users.to_sql('user_table',          conn, index=False, if_exists='replace')
+home.to_sql('home_page',            conn, index=False, if_exists='replace')
+search.to_sql('search_page',        conn, index=False, if_exists='replace')
+payment.to_sql('payment_page',      conn, index=False, if_exists='replace')
+confirm.to_sql('confirmation_page', conn, index=False, if_exists='replace')
+
+print("All tables loaded successfully!")
+
+query = """
+SELECT 'Home Page'       AS step, 1 AS order_num, COUNT(*) AS users FROM home_page
+UNION ALL
+SELECT 'Search Page'     AS step, 2,               COUNT(*) AS users FROM search_page
+UNION ALL
+SELECT 'Payment Page'    AS step, 3,               COUNT(*) AS users FROM payment_page
+UNION ALL
+SELECT 'Confirmation'    AS step, 4,               COUNT(*) AS users FROM confirmation_page
+"""
+pd.read_sql(query, conn)
+
+query = """
+WITH funnel AS (
+    SELECT 'Home Page'    AS step, 1 AS order_num, COUNT(*) AS users FROM home_page
+    UNION ALL
+    SELECT 'Search Page'  AS step, 2, COUNT(*) FROM search_page
+    UNION ALL
+    SELECT 'Payment Page' AS step, 3, COUNT(*) FROM payment_page
+    UNION ALL
+    SELECT 'Confirmation' AS step, 4, COUNT(*) FROM confirmation_page
+)
+SELECT
+    step,
+    users,
+    ROUND(users * 100.0 / LAG(users) OVER (ORDER BY order_num), 1) AS step_conv_pct,
+    ROUND(users * 100.0 / FIRST_VALUE(users) OVER (ORDER BY order_num), 1) AS overall_conv_pct
+FROM funnel
+"""
+pd.read_sql(query, conn)
+
+query = """
+SELECT
+    u.gender,
+    COUNT(DISTINCT h.user_id)  AS home_users,
+    COUNT(DISTINCT s.user_id)  AS search_users,
+    COUNT(DISTINCT p.user_id)  AS payment_users,
+    COUNT(DISTINCT c.user_id)  AS confirm_users,
+    ROUND(COUNT(DISTINCT c.user_id) * 100.0 / COUNT(DISTINCT h.user_id), 1) AS conv_pct
+FROM home_page h
+LEFT JOIN search_page       s ON h.user_id = s.user_id
+LEFT JOIN payment_page      p ON h.user_id = p.user_id
+LEFT JOIN confirmation_page c ON h.user_id = c.user_id
+JOIN user_table             u ON h.user_id = u.user_id
+GROUP BY u.gender
+"""
+pd.read_sql(query, conn)
+
+query = """
+SELECT
+    u.device,
+    COUNT(DISTINCT h.user_id)  AS home_users,
+    COUNT(DISTINCT s.user_id)  AS search_users,
+    COUNT(DISTINCT p.user_id)  AS payment_users,
+    COUNT(DISTINCT c.user_id)  AS confirm_users,
+    ROUND(COUNT(DISTINCT c.user_id) * 100.0 / COUNT(DISTINCT h.user_id), 1) AS conv_pct
+FROM home_page h
+LEFT JOIN search_page       s ON h.user_id = s.user_id
+LEFT JOIN payment_page      p ON h.user_id = p.user_id
+LEFT JOIN confirmation_page c ON h.user_id = c.user_id
+JOIN user_table             u ON h.user_id = u.user_id
+GROUP BY u.device
+ORDER BY conv_pct DESC
+"""
+pd.read_sql(query, conn)
+
+query = """
+SELECT
+    u.traffic_source,
+    COUNT(DISTINCT h.user_id)  AS home_users,
+    COUNT(DISTINCT s.user_id)  AS search_users,
+    COUNT(DISTINCT p.user_id)  AS payment_users,
+    COUNT(DISTINCT c.user_id)  AS confirm_users,
+    ROUND(COUNT(DISTINCT c.user_id) * 100.0 / COUNT(DISTINCT h.user_id), 1) AS conv_pct
+FROM home_page h
+LEFT JOIN search_page       s ON h.user_id = s.user_id
+LEFT JOIN payment_page      p ON h.user_id = p.user_id
+LEFT JOIN confirmation_page c ON h.user_id = c.user_id
+JOIN user_table             u ON h.user_id = u.user_id
+GROUP BY u.traffic_source
+ORDER BY conv_pct DESC
+"""
+pd.read_sql(query, conn)
+
+query = """
+SELECT
+    p.user_id,
+    u.gender,
+    u.device,
+    u.traffic_source
+FROM payment_page p
+LEFT JOIN confirmation_page c ON p.user_id = c.user_id
+JOIN user_table             u ON p.user_id = u.user_id
+WHERE c.user_id IS NULL
+"""
+pd.read_sql(query, conn)
+
+query = """
+SELECT
+    h.user_id,
+    u.gender,
+    u.device,
+    u.traffic_source,
+    CASE WHEN s.user_id IS NOT NULL THEN 1 ELSE 0 END AS reached_search,
+    CASE WHEN p.user_id IS NOT NULL THEN 1 ELSE 0 END AS reached_payment,
+    CASE WHEN c.user_id IS NOT NULL THEN 1 ELSE 0 END AS reached_confirmation
+FROM home_page h
+LEFT JOIN search_page       s ON h.user_id = s.user_id
+LEFT JOIN payment_page      p ON h.user_id = p.user_id
+LEFT JOIN confirmation_page c ON h.user_id = c.user_id
+JOIN user_table             u ON h.user_id = u.user_id
+"""
+pd.read_sql(query, conn)
+
+query = """
+SELECT
+    u.gender,
+    COUNT(DISTINCT h.user_id)                                                        AS home_users,
+    COUNT(DISTINCT s.user_id)                                                        AS search_users,
+    ROUND(COUNT(DISTINCT s.user_id) * 100.0 / COUNT(DISTINCT h.user_id), 1)         AS home_to_search_pct,
+    COUNT(DISTINCT p.user_id)                                                        AS payment_users,
+    ROUND(COUNT(DISTINCT p.user_id) * 100.0 / COUNT(DISTINCT s.user_id), 1)         AS search_to_payment_pct,
+    COUNT(DISTINCT c.user_id)                                                        AS confirm_users,
+    ROUND(COUNT(DISTINCT c.user_id) * 100.0 / COUNT(DISTINCT p.user_id), 1)         AS payment_to_confirm_pct,
+    ROUND(COUNT(DISTINCT c.user_id) * 100.0 / COUNT(DISTINCT h.user_id), 1)         AS overall_conv_pct
+FROM home_page h
+LEFT JOIN search_page       s ON h.user_id = s.user_id
+LEFT JOIN payment_page      p ON h.user_id = p.user_id
+LEFT JOIN confirmation_page c ON h.user_id = c.user_id
+JOIN user_table             u ON h.user_id = u.user_id
+GROUP BY u.gender
+"""
+gender_funnel = pd.read_sql(query, conn)
+print("=== Table 1: Genderwise Conversion per Page ===")
+gender_funnel
+
+query = """
+SELECT
+    u.traffic_source,
+    u.gender,
+    COUNT(DISTINCT h.user_id)                                                        AS home_users,
+    COUNT(DISTINCT s.user_id)                                                        AS search_users,
+    ROUND(COUNT(DISTINCT s.user_id) * 100.0 / COUNT(DISTINCT h.user_id), 1)         AS home_to_search_pct,
+    COUNT(DISTINCT p.user_id)                                                        AS payment_users,
+    ROUND(COUNT(DISTINCT p.user_id) * 100.0 / COUNT(DISTINCT s.user_id), 1)         AS search_to_payment_pct,
+    COUNT(DISTINCT c.user_id)                                                        AS confirm_users,
+    ROUND(COUNT(DISTINCT c.user_id) * 100.0 / COUNT(DISTINCT p.user_id), 1)         AS payment_to_confirm_pct,
+    ROUND(COUNT(DISTINCT c.user_id) * 100.0 / COUNT(DISTINCT h.user_id), 1)         AS overall_conv_pct
+FROM home_page h
+LEFT JOIN search_page       s ON h.user_id = s.user_id
+LEFT JOIN payment_page      p ON h.user_id = p.user_id
+LEFT JOIN confirmation_page c ON h.user_id = c.user_id
+JOIN user_table             u ON h.user_id = u.user_id
+GROUP BY u.traffic_source, u.gender
+ORDER BY u.traffic_source, u.gender
+"""
+traffic_gender = pd.read_sql(query, conn)
+print("=== Table 2: Traffic Source x Gender Conversion ===")
+traffic_gender
+
