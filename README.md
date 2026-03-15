@@ -7,6 +7,9 @@ The objective is to identify **where users drop off**, evaluate **conversion per
 
 The project replicates real-world **product and marketing analytics workflows**, combining SQL analysis, exploratory analysis in Excel, and interactive dashboarding using Power BI.
 
+A detailed presentation with insights and recommendations is presented through Ecommerce Funnel Analysis From Clicks to Conversion pdf
+
+
 ---
 # 📈 Dashboard Preview
 
