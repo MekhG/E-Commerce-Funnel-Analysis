@@ -8,7 +8,7 @@ confirm.to_sql('confirmation_page', conn, index=False, if_exists='replace')
 
 print("All tables loaded successfully!")
 
-query = """
+funnel_counts_sql = """
 SELECT 'Home Page'       AS step, 1 AS order_num, COUNT(*) AS users FROM home_page
 UNION ALL
 SELECT 'Search Page'     AS step, 2,               COUNT(*) AS users FROM search_page
@@ -17,9 +17,10 @@ SELECT 'Payment Page'    AS step, 3,               COUNT(*) AS users FROM paymen
 UNION ALL
 SELECT 'Confirmation'    AS step, 4,               COUNT(*) AS users FROM confirmation_page
 """
-pd.read_sql(query, conn)
+funnel_counts = pd.read_sql(funnel_counts_sql, conn)
+funnel_counts
 
-query = """
+funnel_conversion_sql = """
 WITH funnel AS (
     SELECT 'Home Page'    AS step, 1 AS order_num, COUNT(*) AS users FROM home_page
     UNION ALL
@@ -36,9 +37,10 @@ SELECT
     ROUND(users * 100.0 / FIRST_VALUE(users) OVER (ORDER BY order_num), 1) AS overall_conv_pct
 FROM funnel
 """
-pd.read_sql(query, conn)
+funnel_conversion = pd.read_sql(funnel_conversion_sql, conn)
+funnel_conversion
 
-query = """
+gender_conversion_sql = """
 SELECT
     u.gender,
     COUNT(DISTINCT h.user_id)  AS home_users,
@@ -53,9 +55,10 @@ LEFT JOIN confirmation_page c ON h.user_id = c.user_id
 JOIN user_table             u ON h.user_id = u.user_id
 GROUP BY u.gender
 """
-pd.read_sql(query, conn)
+gender_conversion = pd.read_sql(gender_conversion_sql, conn)
+gender_conversion
 
-query = """
+device_conversion_sql = """
 SELECT
     u.device,
     COUNT(DISTINCT h.user_id)  AS home_users,
@@ -71,9 +74,10 @@ JOIN user_table             u ON h.user_id = u.user_id
 GROUP BY u.device
 ORDER BY conv_pct DESC
 """
-pd.read_sql(query, conn)
+device_conversion = pd.read_sql(device_conversion_sql, conn)
+device_conversion
 
-query = """
+traffic_source_conversion_sql = """
 SELECT
     u.traffic_source,
     COUNT(DISTINCT h.user_id)  AS home_users,
@@ -89,9 +93,10 @@ JOIN user_table             u ON h.user_id = u.user_id
 GROUP BY u.traffic_source
 ORDER BY conv_pct DESC
 """
-pd.read_sql(query, conn)
+traffic_source_conversion = pd.read_sql(traffic_source_conversion_sql,conn)
+traffic_source_conversion
 
-query = """
+payment_dropoff_sql = """
 SELECT
     p.user_id,
     u.gender,
@@ -102,9 +107,10 @@ LEFT JOIN confirmation_page c ON p.user_id = c.user_id
 JOIN user_table             u ON p.user_id = u.user_id
 WHERE c.user_id IS NULL
 """
-pd.read_sql(query, conn)
+payment_dropoffs = pd.read_sql(payment_dropoff_sql, conn)
+payment_dropoffs
 
-query = """
+user_journey_sql = """
 SELECT
     h.user_id,
     u.gender,
@@ -119,9 +125,10 @@ LEFT JOIN payment_page      p ON h.user_id = p.user_id
 LEFT JOIN confirmation_page c ON h.user_id = c.user_id
 JOIN user_table             u ON h.user_id = u.user_id
 """
-pd.read_sql(query, conn)
+user_journey = pd.read_sql(user_journey_sql,conn)
+user_journey
 
-query = """
+gender_funnel_sql = """
 SELECT
     u.gender,
     COUNT(DISTINCT h.user_id)                                                        AS home_users,
@@ -143,7 +150,7 @@ gender_funnel = pd.read_sql(query, conn)
 print("=== Table 1: Genderwise Conversion per Page ===")
 gender_funnel
 
-query = """
+traffic_gender_sql = """
 SELECT
     u.traffic_source,
     u.gender,
